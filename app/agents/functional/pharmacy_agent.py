@@ -25,8 +25,23 @@ class PharmacyAgent:
         supabase = get_supabase()
         rows = []
         for m in medications:
+            raw_id = m.get("id")
+
+            # ── UUID validation ──────────────────────────────────────────────
+            # Flutter generates temporary numeric IDs (e.g. "17767000084033670")
+            # for new medications that haven't been saved yet.
+            # Supabase requires a proper UUID — passing a numeric string causes
+            # "invalid input syntax for type uuid" → HTTP 500.
+            # Fix: only include the id field if it looks like a real UUID.
+            is_real_uuid = bool(
+                raw_id and
+                re.fullmatch(
+                    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+                    raw_id
+                )
+            )
+
             row = {
-                "id": m.get("id"), # ✅ تمرير الـ ID
                 "patient_id": patient_id,
                 "name": m["name"],
                 "active_ingredient": m.get("active_ingredient"),
@@ -34,13 +49,19 @@ class PharmacyAgent:
                 "weekdays": m.get("weekdays", []),
                 "times": m.get("times", []),
                 "is_primary": m.get("is_primary", False),
-                "ai_instruction": m.get("ai_instruction") # ✅ حفظ النصيحة
+                "ai_instruction": m.get("ai_instruction"),
             }
+
+            # Only include id if it's a real UUID (existing record to update)
+            if is_real_uuid:
+                row["id"] = raw_id
+
             rows.append(row)
-            
-        # ✅ استخدام upsert بدلاً من insert لتحديث الموجود وإضافة الجديد
+
+        # upsert: updates existing records (by UUID) and inserts new ones
         supabase.table("medications").upsert(rows).execute()
         return {"saved_count": len(rows)}
+
 
     # ========== 2. Prescription scan (Camera) ==========
     async def scan_prescription(self, patient_id: str, image_base64: str, media_type: str = "image/jpeg") -> dict:
@@ -94,14 +115,20 @@ class PharmacyAgent:
                     existing_primary_times=existing_primary_times
                 )
                 explanation_parts.append(f"Secondary {med['name']}: distributed to avoid conflicts.")
-            suggestions.append({
+            
+            suggestion = {
                 "name": med["name"],
                 "active_ingredient": med.get("active_ingredient"),
                 "dosage_frequency": med["dosage_frequency"],
                 "weekdays": result["weekdays"],
                 "times": result["times"],
                 "is_primary": med.get("is_primary", False),
-            })
+                "ai_instruction": result.get("ai_instruction", "")
+            }
+            if "id" in med:
+                suggestion["id"] = med["id"]
+                
+            suggestions.append(suggestion)
 
         return {
             "type": "primary" if new_medications[0].get("is_primary") else "secondary",

@@ -51,6 +51,7 @@ class PrescriptionScanResponse(BaseModel):
 
 class NewMedicationForSuggestion(BaseModel):
     """Medication that needs scheduling (no weekdays/times yet)."""
+    id: Optional[str] = None
     name: str
     active_ingredient: Optional[str] = None
     dosage_frequency: str
@@ -64,12 +65,14 @@ class ScheduleSuggestRequest(BaseModel):
 
 
 class SuggestedMedication(BaseModel):
+    id: Optional[str] = None
     name: str
     active_ingredient: Optional[str] = None
     dosage_frequency: str
     weekdays: List[str]
     times: List[str]
     is_primary: bool
+    ai_instruction: Optional[str] = None
 
 
 class ScheduleSuggestResponse(BaseModel):
