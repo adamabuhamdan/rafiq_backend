@@ -20,7 +20,8 @@ class Settings(BaseSettings):
 
     # Email
     email_provider: str = "resend"          # "resend" | "sendgrid"
-    resend_api_key: str = ""
+    resend_api_key_1: str = ""
+    resend_api_key_2: str = ""
     sendgrid_api_key: str = ""
     from_email: str = "noreply@rafiq.app"
 

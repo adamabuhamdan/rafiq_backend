@@ -28,7 +28,6 @@ class ReportingAgent:
         )
         return result.data or {}
 
-
     async def generate_weekly_doctor_report(
         self,
         patient_data: dict,
@@ -48,7 +47,11 @@ class ReportingAgent:
             events_text=events_text,
         )
         model = genai.GenerativeModel("gemini-2.5-flash")
-        return model.generate_content(prompt).text
+        response = await model.generate_content_async(
+            prompt,
+            request_options={"timeout": 120}
+        )
+        return response.text
 
     async def generate_weekly_doctor_report_by_id(
         self,
@@ -86,8 +89,11 @@ class ReportingAgent:
                 line += f" | BP (E): {r.get('bp_evening_systolic')}/{r.get('bp_evening_diastolic')}"
             if r.get("notes"):
                 line += f" | Notes: {r['notes']}"
-            if r.get("ai_advice"):
-                line += f" | AI Advice Given: {r['ai_advice']}"
+            
+            # تم تعطيل هذين السطرين بنجاح لتخفيف حجم البيانات
+            # if r.get("ai_advice"):
+            #     line += f" | AI Advice Given: {r['ai_advice']}"
+            
             events_lines.append("- " + line)
 
         events_text = "\n".join(events_lines) if events_lines else "No valid structured events found."
@@ -102,4 +108,8 @@ class ReportingAgent:
             events_text=events_text,
         )
         model = genai.GenerativeModel("gemini-2.5-flash")
-        return model.generate_content(prompt).text
+        response = await model.generate_content_async(
+            prompt,
+            request_options={"timeout": 120}
+        )
+        return response.text

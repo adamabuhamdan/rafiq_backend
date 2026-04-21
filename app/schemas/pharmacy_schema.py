@@ -102,3 +102,20 @@ class InteractionCheckResponse(BaseModel):
     status: str
     summary: str
     interactions: List[InteractionItem] = []
+
+
+# ── Medication Log ────────────────────────────────────────────────────────────
+from datetime import time, datetime
+import uuid
+
+class MedicationLogCreate(BaseModel):
+    medication_id: uuid.UUID
+    scheduled_time: time
+
+class MedicationLogResponse(BaseModel):
+    id: uuid.UUID
+    patient_id: uuid.UUID
+    medication_id: uuid.UUID
+    taken_at: Optional[datetime] = None
+    scheduled_time: time
+    status: str
