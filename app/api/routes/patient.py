@@ -48,11 +48,11 @@ async def create_patient(
 async def get_patient(patient_id: str):
     supabase = get_supabase()
     result = (
-        supabase.table("patients").select("*").eq("id", patient_id).single().execute()
+        supabase.table("patients").select("*").eq("id", patient_id).execute()
     )
-    if not result.data:
+    if not result.data or len(result.data) == 0:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return result.data
+    return result.data[0]
 
 
 @router.patch("/{patient_id}", response_model=PatientResponse)

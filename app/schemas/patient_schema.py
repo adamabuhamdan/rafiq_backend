@@ -20,6 +20,7 @@ class PatientCreate(BaseModel):
     sleep_time: time
     medical_description: str = Field(..., description="وصف الحالة الطبية من الطبيب")
     last_test_results: Optional[str] = Field(None, description="آخر نتائج الفحوصات المخبرية (اختياري)")
+    last_test_pdf_url: Optional[str] = Field(None, description="رابط ملف PDF لآخر نتائج الفحوصات (اختياري)")
 
 
 class PatientUpdate(BaseModel):
@@ -29,6 +30,7 @@ class PatientUpdate(BaseModel):
     diseases: Optional[List[DiseaseType]] = None
     medical_description: Optional[str] = None
     last_test_results: Optional[str] = None
+    last_test_pdf_url: Optional[str] = None
 
 
 class PatientResponse(BaseModel):
@@ -42,6 +44,7 @@ class PatientResponse(BaseModel):
     sleep_time: time
     medical_description: Optional[str] = None
     last_test_results: Optional[str] = None
+    last_test_pdf_url: Optional[str] = None
 
     class Config:
         from_attributes = True

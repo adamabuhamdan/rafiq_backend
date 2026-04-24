@@ -10,6 +10,17 @@ from datetime import datetime
 router = APIRouter(prefix="/settings", tags=["Settings - الإعدادات"])
 
 
+@router.post("/logout")
+async def logout():
+    """
+    Logout the patient.
+    (Primarily client-side token clearance, but this endpoint acknowledges the action).
+    """
+    # If Supabase required server-side session invalidation via JWT, it would go here.
+    # We return a success message so the frontend can proceed to clear local data and navigate.
+    return {"message": "Logged out successfully"}
+
+
 @router.get("/{patient_id}", response_model=SettingsResponse)
 async def get_settings(patient_id: str):
     """Retrieve patient notification/contact settings."""
