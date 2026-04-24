@@ -3,6 +3,7 @@ Pharmacy Agent — unified for camera, schedule suggestions (primary/secondary),
 """
 import json
 import re
+import uuid  # 🛠️ تمت إضافة استدعاء مكتبة uuid هنا
 from datetime import time
 from typing import List, Dict, Any, Optional
 import google.generativeai as genai
@@ -52,9 +53,11 @@ class PharmacyAgent:
                 "ai_instruction": m.get("ai_instruction"),
             }
 
-            # Only include id if it's a real UUID (existing record to update)
+            # 🛠️ التعديل الجديد هنا: توليد ID حقيقي للأدوية الجديدة
             if is_real_uuid:
-                row["id"] = raw_id
+                row["id"] = raw_id # دواء قديم، نستخدم الـ ID الخاص به للتحديث
+            else:
+                row["id"] = str(uuid.uuid4()) # دواء جديد، نصنع له ID حقيقي فوراً
 
             rows.append(row)
 

@@ -25,9 +25,10 @@ python-jose[cryptography]>=3.3.0
 PyJWT>=2.8.0
 
 # Scheduling / Notifications
-apscheduler>=3.10.0
+apscheduler==3.10.4
 resend>=2.0.0
 markdown>=3.0.0
 
 #increption
 pycryptodome>=3.19.0
+

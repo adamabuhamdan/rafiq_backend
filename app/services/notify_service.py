@@ -9,16 +9,17 @@ from app.services.email_service import send_missed_dose_email, send_weekly_docto
 
 
 async def _get_patient_settings(patient_id: str) -> dict:
-    """Fetch patient notification settings from Supabase."""
+    """Fetch patient notification settings from Supabase safely without crashing if empty."""
     supabase = get_supabase()
     result = (
         supabase.table("patient_settings")
         .select("*")
         .eq("patient_id", patient_id)
-        .single()
         .execute()
     )
-    return result.data or {}
+    if not result.data or len(result.data) == 0:
+        return {}
+    return result.data[0]
 
 
 async def send_missed_dose_alert(
@@ -32,8 +33,13 @@ async def send_missed_dose_alert(
     """
     settings = await _get_patient_settings(patient_id)
 
+    if not settings:
+        print(f"[NOTIFY] No settings found for patient {patient_id}. Alert skipped.")
+        return False
+
     if not settings.get("notifications_enabled", False):
         return False
+        
     if not settings.get("missed_dose_alert_enabled", False):
         return False
 

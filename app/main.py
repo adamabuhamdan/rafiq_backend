@@ -3,7 +3,18 @@ Rafiq Backend — Main Application Entry Point
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from app.api.router import router
+from app.services.scheduler import start_scheduler, scheduler
+
+# تشغيل المجدول عند إقلاع التطبيق، وإيقافه عند إغلاق التطبيق
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup Events
+    start_scheduler()
+    yield
+    # Shutdown Events
+    scheduler.shutdown()
 
 app = FastAPI(
     title="رفيق (Rafiq) — Medical AI Backend",
@@ -11,6 +22,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan  # ربط دورة الحياة بالتطبيق
 )
 
 # CORS — adjust origins as needed for your mobile/web client
