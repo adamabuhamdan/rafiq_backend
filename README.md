@@ -1,43 +1,64 @@
-# وثيقة مشروع: تطبيق "رفيق" (Rafiq) - المساعد الطبي الشخصي (Backend v2.1)
+# Rafiq Backend (رفيق)
 
-**الرؤية:** منصة تكنولوجيا صحية (HealthTech) تعمل كمساعد طبي شخصي ذكي لإدارة الأمراض المزمنة. يعتمد النظام على ذكاء اصطناعي "وكيل" (Agentic AI) يربط بين التشخيص الإكلينيكي والخدمات الوظيفية (الصيدلة والتقارير).
-**المساعد الذكي:** "مادو" (Mado) - نظام متعدد الوكلاء (Multi-Agent System).
+Rafiq is an AI-powered clinical assistant designed to support patients with chronic diseases (Diabetes, Hypertension, etc.) by providing real-time clinical guidance, medication scheduling, and health tracking.
 
----
+## 🚀 Key Features
 
-## 🛠 المكدس التقني (Tech Stack)
-*   **الواجهة الخلفية (Backend):** FastAPI / Python 3.11+.
-*   **إدارة البيئة:** Windows/Linux مع `venv` و `pip`.
-*   **قاعدة البيانات والمصادقة:** Supabase (PostgreSQL) لإدارة المستخدمين، الأدوية، والرسائل.
-*   **قاعدة البيانات المتجهة (Vector DB):** Qdrant (لتخزين المراجع الطبية بصيغة Embeddings).
-*   **محرك الذكاء الاصطناعي:** Gemini 2.5 Flash (عبر مكتبة `google-generativeai`).
-*   **النماذج المتضمنة:** 
-    *   `gemini-2.5-flash`: للمحادثة والتحليل والتقارير والرؤية (Vision).
-    *   `models/gemini-embedding-001`: لعمليات الـ RAG (استرجاع المعلومات).
+*   **Multi-Agent Clinical Brain**: A specialized system that routes medical queries to expert agents (Diabetes, BP, Glands) and synthesizes a unified response.
+*   **Intelligent Medication Scheduling**: Automatically generates optimal schedules based on the patient's circadian rhythm (wake/sleep times).
+*   **OCR Prescription Scanning**: Uses Gemini Vision to extract medications from prescription photos.
+*   **Drug-Drug Interaction Check**: Checks for potential clinical conflicts between medications.
+*   **Automated Health Reporting**: Generates weekly clinical reports for doctors and families.
+*   **Background Monitoring**: A background scheduler that detects missed doses and pings services to ensure high availability.
 
 ---
 
-## 🚀 التشغيل السريع (Quick Start)
+## 🧠 Architecture: Multi-Agent Orchestration
 
-### 1. تثبيت المتطلبات (Installation)
-تأكد من وجود Python 3.11 مثبت على جهازك، ثم قم بتشغيل الأوامر التالية:
+Rafiq is powered by a sophisticated multi-agent clinical brain designed to provide specialized, accurate, and empathetic medical guidance. The system follows an **Orchestrate-Specialize-Synthesize** pattern:
+
+### 1. The Orchestrator (Router)
+The **Orchestrator** is the entry point for every patient message. It performs the following critical tasks:
+*   **Intent Classification**: Analyzes the patient's message in real-time to detect multiple medical intents (e.g., "My sugar is high and I feel dizzy").
+*   **Parallel Execution**: If multiple intents are detected, it triggers the relevant specialized agents simultaneously to ensure fast response times.
+*   **Context Injection**: It retrieves the patient's specific medical history (diseases, wake/sleep times) from Supabase and passes it to the specialists.
+
+### 2. Specialized Clinical Agents
+Each agent is a specialist in its domain, equipped with specific medical prompts and logic:
+*   **Diabetes Agent**: Monitors glucose levels and provides guidance on hypoglycemia/hyperglycemia.
+*   **Blood Pressure (BP) Agent**: Analyzes systolic/diastolic trends and provides advice on hypertension management.
+*   **Glands (Endocrine) Agent**: Specializes in thyroid and hormonal balance advice.
+*   **Pharmacy Agent**: A functional expert that scans prescriptions via OCR, detects interactions, and generates medication schedules.
+
+### 3. The Synthesizer
+When multiple specialists provide advice, the **Synthesizer** merges their outputs. It ensures:
+*   **Coherence**: The response flows naturally and doesn't feel like disjointed messages.
+*   **Conflict Resolution**: It ensures advice from one specialist doesn't contradict another.
+*   **Tone Matching**: Maintains a consistent, supportive personality.
+
+---
+
+## 🛠️ Setup & Installation
+
+### 1. Environment Preparation
+Ensure you have Python 3.10+ installed.
 
 ```bash
-# إنشاء بيئة افتراضية
+# Create a virtual environment
 python -m venv venv
 
-# تفعيل البيئة (Windows)
-.\venv\Scripts\activate
-
-# تفعيل البيئة (Linux/Mac)
+# Activate on Windows
+source venv/Scripts/activate
+# OR on Linux/Mac
 source venv/bin/activate
 
-# تثبيت المكتبات المطلوبة
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. إعداد المتغيرات (Environment Setup)
-قم بإنشاء ملف `.env` في المجلد الرئيسي وأضف المفاتيح التالية:
+### 2. Environment Variables
+Create a `.env` file in the root directory and add your credentials:
+
 ```env
 GEMINI_API_KEY=your_gemini_key
 SUPABASE_URL=your_supabase_url
@@ -46,51 +67,21 @@ QDRANT_URL=your_qdrant_url
 QDRANT_API_KEY=your_qdrant_key
 ```
 
-### 3. تشغيل السيرفر (Running the Server)
-لتشغيل المشروع في وضع التطوير (Development Mode):
+### 3. Running the Server
+Run the FastAPI server using Uvicorn:
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
----
+## 📡 Technology Stack
 
-## 🧠 هندسة النظام (Multi-Agent Ecosystem)
-
-1.  **الوكيل الموجِّه (Orchestrator):** يصنف النية (Intent) ويستدعي الوكلاء المتخصصين بالتوازي.
-2.  **الوكلاء الإكلينيكيون (Clinical Agents):** يعملون بنظام RAG مخصص لكل مرض (سكري، ضغط، غدد).
-3.  **وكيل الصيدلة (Pharmacy Agent):** 
-    *   **Clinical Safety Pivot:** تم تعديل منطق مسح الصور لاستخراج (الاسم والمادة الفعالة) فقط من "علب الدواء" وتجاهل الروشتات المكتوبة يدوياً لضمان السلامة ومنع الهلوسة البرمجية.
-    *   **Smart Scheduling:** يدعم الجدولة الذكية (Primary/Secondary) وتخزين التعليمات في حقل `ai_instruction`.
-    *   **Upsert Logic:** النظام يدعم التحديث الذكي للأدوية لمنع التكرار في قاعدة البيانات.
+*   **Backend Framework**: FastAPI (Asynchronous)
+*   **AI Engine**: Google Gemini 2.0 Flash / Pro
+*   **Database & Auth**: Supabase (PostgreSQL)
+*   **Vector Database**: Qdrant (Clinical Context)
+*   **Scheduler**: APScheduler (Background tasks)
 
 ---
 
-## 📂 الهيكلية المعمارية (Folder Structure)
-
-```text
-rafiq_backend/
-├── app/
-│   ├── api/routes/             # مسارات FastAPI (Chat, Pharmacy, Reports, Auth)
-│   ├── core/                   # الإعدادات (Config) والـ Prompts المركزية
-│   ├── agents/                 # الوكلاء (Orchestrator, Clinical, Functional)
-│   ├── schemas/                # نماذج Pydantic للتحقق من البيانات (Pydantic Models)
-│   ├── services/               # منطق الخدمة المستقل (Scheduling, DB Logic)
-│   └── db/                     # عملاء قاعدة البيانات (Supabase, Qdrant)
-├── requirements.txt            # قائمة المكتبات
-└── .env                        # متغيرات البيئة (مخفي)
-```
-
----
-
-## 🔌 دليل المطور للواجهة الأمامية (Frontend Guide)
-
-*   **Chat API:** أرسل `language: "ar"` أو `"en"` للتحكم في لغة الرد.
-*   **Pharmacy Scan:** يعيد الآن مصفوفة (Array) من الأدوية المستخرجة من الصورة الواحدة.
-*   **Upsert Support:** تأكد من إرسال الـ `id` الخاص بالدواء عند التحديث لضمان عدم تكراره.
-*   **AI Instruction:** حقل جديد في الداتابيس لعرض نصائح الجدولة الذكية للمريض.
-
----
-
-> [!IMPORTANT]
-> يمنع السيرفر استخراج الجرعات (Dosage) آلياً من الصور؛ يجب على المريض إدخالها يدوياً لضمان الدقة الطبية الكاملة وتجنب المسؤولية القانونية.
+*Rafiq: Your intelligent clinical companion, always by your side.*
