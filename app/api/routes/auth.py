@@ -23,9 +23,10 @@ async def send_otp(payload: OTPRequest):
     """Send an 8-digit OTP to the patient's email via Supabase Auth (free, no SMS needed). Expires in 1 hour."""
     supabase = get_supabase()
     try:
-        supabase.auth.sign_in_with_otp({"email": payload.email})
+        supabase.auth.sign_in_with_otp({"email": payload.email, "options": {"should_create_user": True}})
         return {"message": "OTP sent to email successfully"}
     except Exception as e:
+        print(f"[AUTH] send-otp error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 

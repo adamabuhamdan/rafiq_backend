@@ -1,10 +1,12 @@
 """
 Background Scheduler for automatic missed dose detection and email alerts.
 """
+import os
 import asyncio
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.db.supabase_client import get_supabase
 from app.api.routes.pharmacy import check_missed_doses_for_patient
+from qdrant_client import QdrantClient
 
 scheduler = BackgroundScheduler()
 
@@ -30,6 +32,23 @@ async def check_all_patients_missed_doses():
 def run_check_sync():
     asyncio.run(check_all_patients_missed_doses())
 
+def ping_qdrant():
+    """
+    Ping the Qdrant cluster to keep it alive.
+    """
+    try:
+        url = os.getenv("QDRANT_URL")
+        api_key = os.getenv("QDRANT_API_KEY")
+        if not url or not api_key:
+            print("[SCHEDULER] QDRANT_URL or QDRANT_API_KEY not found. Skipping Qdrant ping.")
+            return
+
+        client = QdrantClient(url=url, api_key=api_key)
+        client.get_collections()
+        print("[SCHEDULER] Qdrant pinged successfully.")
+    except Exception as e:
+        print(f"[SCHEDULER] Error pinging Qdrant: {e}")
+
 def start_scheduler():
     """
     Start the background scheduler when the FastAPI app starts.
@@ -41,5 +60,14 @@ def start_scheduler():
         id='missed_doses_checker',
         replace_existing=True
     )
+    
+    scheduler.add_job(
+        ping_qdrant,
+        'interval',
+        hours=24,
+        id='qdrant_keep_alive',
+        replace_existing=True
+    )
+    
     scheduler.start()
-    print("[SCHEDULER] Started. Will check missed doses every 15 minutes.")
+    print("[SCHEDULER] Started. Will check missed doses every 15 minutes, and ping Qdrant every 24 hours.")

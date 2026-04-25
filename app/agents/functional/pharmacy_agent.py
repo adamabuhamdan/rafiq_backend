@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Optional
 import google.generativeai as genai
 
 from app.agents.tools.pharmacy_api import check_drug_interactions, MedicationInfo
-from app.services.schedule_service import suggest_primary_schedule, suggest_secondary_schedule
+from app.services.schedule_service import suggest_comprehensive_schedule
 from app.db.supabase_client import get_supabase
 from app.core.config import get_settings
 from app.core.prompts import PRESCRIPTION_SCAN_PROMPT
@@ -91,53 +91,14 @@ class PharmacyAgent:
         # Fetch existing medications (for conflict avoidance)
         existing_res = supabase.table("medications").select("weekdays, times, is_primary, name").eq("patient_id", patient_id).execute()
         existing_meds = existing_res.data or []
-        existing_primary_times = []
-        for med in existing_meds:
-            if med.get("is_primary"):
-                existing_primary_times.extend(med.get("times", []))
 
-        suggestions = []
-        explanation_parts = []
-
-        for med in new_medications:
-            if med.get("is_primary"):
-                disease = p.get("diseases", ["default"])[0]
-                result = await suggest_primary_schedule(
-                    disease=disease,
-                    wake_time=p["wake_time"],
-                    sleep_time=p["sleep_time"],
-                    dosage_frequency=med["dosage_frequency"],
-                    existing_meds=existing_meds
-                )
-                explanation_parts.append(f"Primary {med['name']}: scheduled based on {disease}.")
-            else:
-                result = await suggest_secondary_schedule(
-                    dosage_frequency=med["dosage_frequency"],
-                    wake_time=p["wake_time"],
-                    sleep_time=p["sleep_time"],
-                    existing_primary_times=existing_primary_times
-                )
-                explanation_parts.append(f"Secondary {med['name']}: distributed to avoid conflicts.")
-            
-            suggestion = {
-                "name": med["name"],
-                "active_ingredient": med.get("active_ingredient"),
-                "dosage_frequency": med["dosage_frequency"],
-                "weekdays": result["weekdays"],
-                "times": result["times"],
-                "is_primary": med.get("is_primary", False),
-                "ai_instruction": result.get("ai_instruction", "")
-            }
-            if "id" in med:
-                suggestion["id"] = med["id"]
-                
-            suggestions.append(suggestion)
-
-        return {
-            "type": "primary" if new_medications[0].get("is_primary") else "secondary",
-            "explanation": " ".join(explanation_parts),
-            "suggestions": suggestions,
-        }
+        return await suggest_comprehensive_schedule(
+            diseases=p.get("diseases", []),
+            wake_time=p["wake_time"],
+            sleep_time=p["sleep_time"],
+            new_medications=new_medications,
+            existing_meds=existing_meds
+        )
 
     # ========== 4. Interaction check ==========
     async def check_interactions(self, medications: list[dict]) -> dict:
